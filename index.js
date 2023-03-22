@@ -5,7 +5,7 @@ import reflector from "rpc-reflector";
 // @ts-expect-error
 import DuplexPair from "native-duplexpair";
 
-import { DataTypeDriver } from "./mapeo.js";
+import { DataTypeDriver } from "./mapeo-drivers.js";
 
 const { createClient, createServer } = reflector;
 
@@ -17,7 +17,7 @@ const { createClient, createServer } = reflector;
  * @extends {TypedEmitter<ApiEvents>}
  */
 class Api extends TypedEmitter {
-  /** @type {import('./mapeo').DataTypeDriver<import('./types/mapeo').Observation>} */
+  /** @type {import('./mapeo-drivers').DataTypeDriver<import('./types/mapeo').Observation>} */
   #observation;
 
   constructor() {

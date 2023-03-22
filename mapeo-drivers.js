@@ -1,6 +1,4 @@
 // @ts-check
-import EventEmitter from "node:events";
-
 /**
  * @typedef {Record<string, *>} MapeoType
  */
@@ -170,21 +168,17 @@ export class DataTypeDriver {
  * @property {ConnectionType[]} sync
  */
 
-export class SyncDriver extends EventEmitter {
+export class SyncDriver {
   /** @type {Set<ConnectionType>} */
   _discovery = new Set();
 
   /** @type {Set<ConnectionType>} */
   _sync = new Set();
 
-  constructor() {
-    super();
-  }
-
   /**
-   * @returns {Promise<SyncInfo>}
+   * @returns {SyncInfo}
    */
-  async info() {
+  info() {
     return {
       discovery: Array.from(this._discovery.values()),
       sync: Array.from(this._sync.values()),
@@ -194,58 +188,26 @@ export class SyncDriver extends EventEmitter {
   /**
    * @param {ConnectionType[] | null} connectionTypes
    */
-  async setDiscovery(connectionTypes) {
+  setDiscovery(connectionTypes) {
     const ct = connectionTypes || [];
-
-    const wasEmpty = this._discovery.size === 0;
 
     this._discovery.clear();
 
-    if (ct.length === 0 && !wasEmpty) {
-      setTimeout(() => {
-        this.emit("discovery:stop");
-      }, 2000);
-
-      return;
-    }
-
     for (const val of ct) {
       this._discovery.add(val);
-    }
-
-    if (wasEmpty) {
-      setTimeout(() => {
-        this.emit("discovery:start");
-      }, 2000);
     }
   }
 
   /**
    * @param {ConnectionType[] | null} connectionTypes
    */
-  async setSync(connectionTypes) {
+  setSync(connectionTypes) {
     const ct = connectionTypes || [];
-
-    const wasEmpty = this._sync.size === 0;
 
     this._sync.clear();
 
-    if (ct.length === 0 && !wasEmpty) {
-      setTimeout(() => {
-        this.emit("sync:stop");
-      }, 2000);
-
-      return;
-    }
-
     for (const val of ct) {
       this._sync.add(val);
-    }
-
-    if (wasEmpty) {
-      setTimeout(() => {
-        this.emit("sync:start");
-      }, 2000);
     }
   }
 }
@@ -281,96 +243,25 @@ export class SyncDriver extends EventEmitter {
  * @property {{timestamp: string, error: string}?} connectionError
  */
 
-export class DeviceDriver extends EventEmitter {
+export class DeviceDriver {
   /** @type {Map<string, DeviceInfo>} */
   _devices = new Map();
 
-  constructor() {
-    super();
-  }
-
   /**
    * @param {string} id
-   * @returns {Promise<DeviceInfo | null>}
+   * @returns {DeviceInfo | null}
    */
-  async get(id) {
+  get(id) {
     const found = this._devices.get(id);
 
     return found || null;
   }
 
   /**
-   * @returns {Promise<DeviceInfo[]>}
+   * @returns {DeviceInfo[]}
    */
-  async getAll() {
+  getAll() {
     return Array.from(this._devices.values());
-  }
-
-  /**
-   *
-   * @param {*} info
-   */
-  _triggerConnectEvent(info) {
-    const device = this._devices.get(info.id);
-
-    if (device) {
-      this._devices.set(device.id, info);
-      this.emit("connect", device);
-    }
-  }
-
-  /**
-   *
-   * @param {string} id
-   */
-  _triggerDisconnectEvent(id) {
-    const device = this._devices.get(id);
-
-    if (device) {
-      this._devices.delete(id);
-      this.emit("disconnect", device);
-    }
-  }
-
-  /**
-   *
-   * @param {string} id
-   * @param {*} info
-   */
-  _triggerInfoEvent(id, info) {
-    const device = this._devices.get(id);
-
-    if (device) {
-      const updated = { ...device, ...info };
-      this._devices.set(id, updated);
-      this.emit("info", updated);
-    }
-  }
-
-  /**
-   *
-   * @param {string} id
-   */
-  _triggerSyncEvent(id) {
-    const device = this._devices.get(id);
-
-    if (device) {
-      const now = new Date().toISOString();
-
-      this.emit("sync", {
-        id,
-        db: { has: 10, wants: 10 },
-        media: { has: 5, wants: 5 },
-        atSyncStart: {
-          timestamp: now,
-          db: { has: 10, wants: 10 },
-          media: { has: 5, wants: 5 },
-        },
-        lastCompletedAt: now,
-        syncError: null,
-        connectionError: null,
-      });
-    }
   }
 }
 
@@ -393,7 +284,7 @@ export class DeviceDriver extends EventEmitter {
  * @property {ProjectRole} role
  */
 
-export class ProjectDriver extends EventEmitter {
+export class ProjectDriver {
   /** @type {Map<string, ProjectMember>} */
   _members = new Map();
 
@@ -404,8 +295,6 @@ export class ProjectDriver extends EventEmitter {
    * @param {string} name
    */
   constructor(name) {
-    super();
-
     this._id = Date.now().toString();
     this._name = name;
   }
@@ -421,20 +310,19 @@ export class ProjectDriver extends EventEmitter {
       /**
        * @param {string} id
        *
-       * @returns {Promise<ProjectMember | null>}
+       * @return {ProjectMember | null}
        */
-      async get(id) {
+      get(id) {
         const member = self._members.get(id);
 
         return member || null;
       },
 
       /**
-       *
        * @param {*} opts
-       * @returns
+       * @returns {ProjectMember[]}
        */
-      async getMany(opts) {
+      getMany(opts) {
         return Array.from(self._members.values());
       },
 
@@ -442,9 +330,9 @@ export class ProjectDriver extends EventEmitter {
        * @param {string} id
        * @param {{name:  string?, role: ProjectRole}} info
        *
-       * @returns {Promise<ProjectMember>}
+       * @returns {ProjectMember}
        */
-      async add(id, info) {
+      add(id, info) {
         if (self._members.has(id)) throw new Error("Already exists");
         const member = { ...info, id };
         self._members.set(id, member);
@@ -453,7 +341,7 @@ export class ProjectDriver extends EventEmitter {
       /**
        * @param {string} id
        */
-      async remove(id) {
+      remove(id) {
         if (!self._members.has(id)) throw new Error("Does not exist");
         self._members.delete(id);
       },
@@ -462,9 +350,9 @@ export class ProjectDriver extends EventEmitter {
        * @param {string} id
        * @param {{name:  string?, role: ProjectRole}} info
        *
-       * @returns {Promise<ProjectMember>}
+       * @returns {ProjectMember}
        */
-      async update(id, info) {
+      update(id, info) {
         const member = self._members.get(id);
 
         if (!member) throw new Error("Does not exist");
@@ -483,77 +371,45 @@ export class ProjectDriver extends EventEmitter {
 
     return {
       /**
-       *
-       * @param {*} id
-       * @param {*} role
+       * @param {string} id
+       * @param {ProjectRole} role
        */
-      async create(id, role) {
+      create(id, role) {
         if (!self._invites.has(id)) {
           self._invites.set(id, { id, role });
-          // Not an actual event to implement and use
-          self.emit("invite:send", { id, role });
         }
       },
 
       /**
-       *
        * @param {*} opts
-       * @returns
+       * @returns {{id: string, role: ProjectRole}[]}
        */
-      async getMany(opts) {
+      getMany(opts) {
         return Array.from(self._invites.values());
       },
     };
   }
 
   /**
-   * @returns {Promise<Project>}
+   * @returns {Project}
    */
-  async info() {
+  info() {
     return { id: this._id, name: this._name };
-  }
-
-  /**
-   *
-   * @param {string} id
-   * @param {*} info
-   */
-  _triggerInviteAcceptedEvent(id, info) {
-    if (this._invites.has(id)) {
-      this.emit("invite:accepted", id, info);
-      this._invites.delete(id);
-    }
-  }
-
-  /**
-   *
-   * @param {*} id
-   * @param {*} info
-   */
-  _triggerInviteDeclinedEvent(id, info) {
-    if (this._invites.has(id)) {
-      this.emit("invite:declined", id, info);
-      this._invites.delete(id);
-    }
   }
 }
 
-export class ProjectsManagementDriver extends EventEmitter {
+export class ProjectsManagementDriver {
   _id = Date.now().toString();
 
   /** @type {Map<string, ProjectDriver>} */
   _projects = new Map();
 
-  constructor() {
-    super();
-  }
-
   /**
    * @param {string} id
    *
-   * @returns {Promise<Project | null>}
+   * @returns {Project | null}
    */
-  async get(id) {
+  get(id) {
     const project = this._projects.get(id);
 
     if (!project) return null;
@@ -562,30 +418,23 @@ export class ProjectsManagementDriver extends EventEmitter {
   }
 
   /**
-   *
    * @param {*} opts
    *
-   * @returns {Promise<Project[]>}
+   * @returns {Project[]}
    */
-  async getMany(opts) {
-    return Promise.all(
-      Array.from(this._projects.values()).map((p) => p.info())
-    );
+  getMany(opts) {
+    return Array.from(this._projects.values()).map((p) => p.info());
   }
 
   /**
    * @param {{ name: string }} opts
    *
-   * @returns {Promise<Project>}
+   * @returns {Project}
    */
-  async create(opts) {
+  create(opts) {
     const project = new ProjectDriver(opts.name);
 
-    project.addListener("invite:send", (id, info) => {
-      this.emit("invite:received", id, info);
-    });
-
-    const info = await project.info();
+    const info = project.info();
 
     this._projects.set(info.id, project);
 
@@ -593,13 +442,12 @@ export class ProjectsManagementDriver extends EventEmitter {
   }
 
   /**
-   *
    * @param {string} id
    * @param {{ name: string }} info
    *
-   * @returns {Promise<Project>}
+   * @returns {Project}
    */
-  async update(id, info) {
+  update(id, info) {
     const project = this._projects.get(id);
 
     if (!project) throw new Error("Not found");
@@ -613,9 +461,9 @@ export class ProjectsManagementDriver extends EventEmitter {
   /**
    * @param {string} id
    *
-   * @returns {Promise<Project>}
+   * @returns {Project}
    */
-  async delete(id) {
+  delete(id) {
     const project = this._projects.get(id);
 
     if (!project) throw new Error("Not found");
@@ -630,38 +478,16 @@ export class ProjectsManagementDriver extends EventEmitter {
 
     return {
       /**
-       *
        * @param {string} id
        * @param {*} params
        */
-      async accept(id, params) {
-        const project = self._projects.get(id);
-
-        if (project) {
-          project._triggerInviteAcceptedEvent(id, params);
-        }
-      },
+      accept(id, params) {},
 
       /**
-       *
        * @param {string} id
        * @param {*} params
        */
-      async decline(id, params) {
-        const project = self._projects.get(id);
-
-        if (project) {
-          project._triggerInviteDeclinedEvent(id, params);
-        }
-      },
+      async decline(id, params) {},
     };
-  }
-
-  /**
-   *
-   * @param {*} info
-   */
-  _triggerInviteReceivedEvent(info) {
-    this.emit("invite:received", info);
   }
 }
