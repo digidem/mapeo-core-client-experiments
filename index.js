@@ -133,43 +133,32 @@ class Api extends TypedEmitter {
   const api = new Api();
 
   // 1. Set up the server
-  function setupServer() {
-    api.on("discovery:start", () => {
+  const { close } = createServer(api, serverStream);
+
+  // 2. Set up the client
+  /**
+   * @type {import('rpc-reflector/dist/client').ClientApi<typeof api>}
+   */
+  const client = createClient(clientStream);
+
+  // 3. Run stuff using the client
+  eventsExample: {
+    api.once("discovery:start", () => {
       console.log("discovery started");
       api.emit("invite:received");
     });
 
-    api.on("invite:accepted", () => {
+    api.once("invite:accepted", () => {
       console.log("invite was accepted");
     });
 
-    const { close } = createServer(api, serverStream);
-
-    return close;
-  }
-
-  const close = setupServer();
-
-  // 2. Set up the client
-  function setupClient() {
-    /**
-     * @type {import('rpc-reflector/dist/client').ClientApi<typeof api>}
-     */
-    const client = createClient(clientStream);
-
-    client.on("invite:received", async () => {
+    client.once("invite:received", async () => {
       console.log("client received invite, accepting");
       await client.$projectsManagement.invite.accept();
     });
 
-    return client;
-  }
-
-  const client = setupClient();
-
-  // 3. Run stuff using the client
-  eventsExample: {
     await client.$sync.setDiscovery();
+
     api.emit("discovery:start");
   }
 
