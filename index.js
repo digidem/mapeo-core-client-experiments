@@ -1,9 +1,13 @@
 // @ts-check
 import { TypedEmitter } from "tiny-typed-emitter";
-const { createClient, createServer } = require("rpc-reflector");
+import reflector from "rpc-reflector";
 
 // @ts-expect-error
 import DuplexPair from "native-duplexpair";
+
+import { DataTypeDriver } from "./mapeo.js";
+
+const { createClient, createServer } = reflector;
 
 /**
  * @typedef {import('./types/api').ApiEvents} ApiEvents
@@ -13,8 +17,17 @@ import DuplexPair from "native-duplexpair";
  * @extends {TypedEmitter<ApiEvents>}
  */
 class Api extends TypedEmitter {
+  /** @type {import('./mapeo').DataTypeDriver<import('./types/mapeo').Observation>} */
+  #observation;
+
   constructor() {
     super();
+
+    this.#observation = new DataTypeDriver("observation");
+  }
+
+  get observation() {
+    return this.#observation;
   }
 
   get $sync() {
@@ -119,20 +132,11 @@ class Api extends TypedEmitter {
 
   const api = new Api();
 
-  /**
-   * @param {keyof import('./types/api').ApiEvents} eventName
-   */
-  function simulateApiEvent(eventName) {
-    setTimeout(() => {
-      api.emit(eventName);
-    }, 1000);
-  }
-
   // 1. Set up the server
   function setupServer() {
     api.on("discovery:start", () => {
       console.log("discovery started");
-      simulateApiEvent("invite:received");
+      api.emit("invite:received");
     });
 
     api.on("invite:accepted", () => {
@@ -164,6 +168,37 @@ class Api extends TypedEmitter {
   const client = setupClient();
 
   // 3. Run stuff using the client
-  await client.$sync.setDiscovery();
-  simulateApiEvent("discovery:start");
+  eventsExample: {
+    await client.$sync.setDiscovery();
+    api.emit("discovery:start");
+  }
+
+  dataTypeExample: {
+    const obs = await client.observation.create({
+      lat: 0,
+      lon: 0,
+      tags: {
+        type: "animal",
+      },
+    });
+
+    console.log(obs);
+
+    const updatedObs = await client.observation.update(obs.version, {
+      ...obs.value,
+      tags: {
+        type: "place",
+      },
+    });
+
+    console.log(updatedObs);
+
+    const allObs = await client.observation.getMany({ includeDeleted: true });
+
+    console.log(allObs.length); // should be 2
+
+    const deletedObs = await client.observation.delete(updatedObs.version);
+
+    console.log(deletedObs.deleted); // should be true
+  }
 })();
