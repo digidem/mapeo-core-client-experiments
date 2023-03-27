@@ -12,9 +12,68 @@
  * @property {boolean} deleted
  * @property {string[]} links
  * @property {string[]} forks
- * @property {string} created_at
- * @property {string} updated_at
+ * @property {number} created_at
+ * @property {number?} updated_at
  * @property {V} value
+ */
+
+/** @typedef {'lan' | 'internet'} ConnectionType */
+
+/**
+ * @typedef {Object} SyncInfo
+ *
+ * @property {ConnectionType[]} discovery
+ * @property {ConnectionType[]} sync
+ */
+
+/**
+ * @typedef {Object} DeviceInfo
+ *
+ * @property {string} id
+ * @property {string} deviceId
+ * @property {string?} name
+ * @property {number} lastSynced
+ * @property {number} lastSeen
+ *
+ */
+
+/**
+ * @typedef {Object} SyncExchangeInfo
+ *
+ * @property {number} has
+ * @property {number} wants
+ *
+ */
+
+/**
+ * @typedef {Object} SyncState
+ *
+ * @property {string} id
+ * @property {SyncExchangeInfo} db
+ * @property {SyncExchangeInfo} media
+ * @property {{timestamp: string, db: SyncExchangeInfo, media: SyncExchangeInfo}} atSyncStart
+ * @property {string} lastCompletedAt
+ * @property {{timestamp: string, error: string}?} syncError
+ * @property {{timestamp: string, error: string}?} connectionError
+ */
+
+/**
+ * @typedef {Object} Project
+ *
+ * @property {string} id
+ * @property {string} name
+ */
+
+/**
+ * @typedef {'creator' | 'coordinator' | 'member'} ProjectRole
+ */
+
+/**
+ * @typedef {Object} ProjectMember
+ *
+ * @property {string} id
+ * @property {string?} name
+ * @property {ProjectRole} role
  */
 
 /**
@@ -45,8 +104,8 @@ export class DataTypeDriver {
     const doc = {
       id: now.toString(),
       version: `${now}@1`,
-      updated_at: new Date(now).toISOString(),
-      created_at: new Date(now).toISOString(),
+      created_at: now,
+      updated_at: null,
       deleted: false,
       value,
       forks: [],
@@ -126,7 +185,7 @@ export class DataTypeDriver {
       ...doc,
       version: nextVersion,
       links: [...doc.links, doc.version],
-      updated_at: new Date().toISOString(),
+      updated_at: Date.now(),
       value: { ...doc.value, ...value },
     };
 
@@ -150,7 +209,7 @@ export class DataTypeDriver {
       ...doc,
       deleted: true,
       links: [...doc.links, doc.version],
-      updated_at: new Date().toISOString(),
+      updated_at: Date.now(),
     };
 
     this._db.push(updated);
@@ -158,15 +217,6 @@ export class DataTypeDriver {
     return updated;
   }
 }
-
-/** @typedef {'lan' | 'internet'} ConnectionType */
-
-/**
- * @typedef {Object} SyncInfo
- *
- * @property {ConnectionType[]} discovery
- * @property {ConnectionType[]} sync
- */
 
 export class SyncDriver {
   /** @type {Set<ConnectionType>} */
@@ -212,37 +262,6 @@ export class SyncDriver {
   }
 }
 
-/**
- * @typedef {Object} DeviceInfo
- *
- * @property {string} id
- * @property {string} deviceId
- * @property {string?} name
- * @property {number} lastSynced
- * @property {number} lastSeen
- *
- */
-
-/**
- * @typedef {Object} SyncExchangeInfo
- *
- * @property {number} has
- * @property {number} wants
- *
- */
-
-/**
- * @typedef {Object} SyncState
- *
- * @property {string} id
- * @property {SyncExchangeInfo} db
- * @property {SyncExchangeInfo} media
- * @property {{timestamp: string, db: SyncExchangeInfo, media: SyncExchangeInfo}} atSyncStart
- * @property {string} lastCompletedAt
- * @property {{timestamp: string, error: string}?} syncError
- * @property {{timestamp: string, error: string}?} connectionError
- */
-
 export class DeviceDriver {
   /** @type {Map<string, DeviceInfo>} */
   _devices = new Map();
@@ -264,25 +283,6 @@ export class DeviceDriver {
     return Array.from(this._devices.values());
   }
 }
-
-/**
- * @typedef {Object} Project
- *
- * @property {string} id
- * @property {string} name
- */
-
-/**
- * @typedef {'creator' | 'coordinator' | 'member'} ProjectRole
- */
-
-/**
- * @typedef {Object} ProjectMember
- *
- * @property {string} id
- * @property {string?} name
- * @property {ProjectRole} role
- */
 
 export class ProjectDriver {
   /** @type {Map<string, ProjectMember>} */

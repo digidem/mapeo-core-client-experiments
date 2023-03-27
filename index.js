@@ -1,193 +1,120 @@
 // @ts-check
-import { TypedEmitter } from "tiny-typed-emitter";
 import reflector from "rpc-reflector";
-
-// @ts-expect-error
 import DuplexPair from "native-duplexpair";
 
-import { DataTypeDriver } from "./mapeo-drivers.js";
+import { Api } from "./api.js";
 
 const { createClient, createServer } = reflector;
 
 /**
- * @typedef {import('./types/api').ApiEvents} ApiEvents
+ * @template A
+ *
+ * @typedef {import('rpc-reflector/dist/client.js').ClientApi<A>} ClientApi
  */
 
 /**
- * @extends {TypedEmitter<ApiEvents>}
+ * @param {Api} api
+ * @param {import('stream').Duplex} channel
+ *
+ * @returns {() => void}
  */
-class Api extends TypedEmitter {
-  /** @type {import('./mapeo-drivers').DataTypeDriver<import('./types/mapeo').Observation>} */
-  #observation;
-
-  constructor() {
-    super();
-
-    this.#observation = new DataTypeDriver("observation");
-  }
-
-  get observation() {
-    return this.#observation;
-  }
-
-  get $sync() {
-    console.log("$sync");
-
-    return {
-      info() {
-        console.log("\tinfo");
-      },
-      setDiscovery() {
-        console.log("\tsetDiscovery");
-      },
-      setSync() {
-        console.log("\tsetSync");
-      },
-    };
-  }
-
-  get $device() {
-    console.log("$device");
-    return {
-      get() {
-        console.log("\tget");
-      },
-      getAll() {
-        console.log("\tgetAll");
-      },
-    };
-  }
-
-  get $project() {
-    console.log("$project");
-
-    return {
-      info() {
-        console.log("\tinfo");
-      },
-      member: {
-        get() {
-          console.log("\tmember.get");
-        },
-        getMany() {
-          console.log("\tmember.getMany");
-        },
-        add() {
-          console.log("\tmember.add");
-        },
-        update() {
-          console.log("\tmember.update");
-        },
-        remove() {
-          console.log("\tmember.remove");
-        },
-      },
-      invite: {
-        create() {
-          console.log("\tinvite.create");
-        },
-        getMany() {
-          console.log("\tinvite.getMany");
-        },
-      },
-    };
-  }
-
-  get $projectsManagement() {
-    console.log("$projectsManagement");
-
-    return {
-      get() {
-        console.log("\tget");
-      },
-      getMany() {
-        console.log("\tgetMany");
-      },
-      create() {
-        console.log("\tcreate");
-      },
-      update() {
-        console.log("\tupdate");
-      },
-      delete() {
-        console.log("\tdelete");
-      },
-      invite: {
-        accept() {
-          console.log("\tinvite.accept");
-        },
-        decline() {
-          console.log("\tinvite.decline");
-        },
-      },
-    };
-  }
+function setupServer(api, channel) {
+  return createServer(api, channel).close;
 }
 
-(async function main() {
-  const { socket1, socket2 } = new DuplexPair({ objectMode: true });
+/**
+ * @template {Api} A
+ *
+ * @param {import('stream').Duplex} channel
+ *
+ * @returns {ClientApi<A>}
+ */
+function setupClient(channel) {
+  return createClient(channel);
+}
 
-  const serverStream = socket1;
-  const clientStream = socket2;
+async function runEventsExample() {
+  console.log("\nEVENTS EXAMPLE:\n");
+
+  const { socket1, socket2 } = new DuplexPair({ objectMode: true });
 
   const api = new Api();
 
-  // 1. Set up the server
-  const { close } = createServer(api, serverStream);
+  api.once("discovery:start", () => {
+    console.log("discovery started");
+    api.emit("invite:received");
+  });
 
-  // 2. Set up the client
-  /**
-   * @type {import('rpc-reflector/dist/client').ClientApi<typeof api>}
-   */
-  const client = createClient(clientStream);
+  api.once("invite:accepted", () => {
+    console.log("invite was accepted");
+  });
 
-  // 3. Run stuff using the client
-  eventsExample: {
-    api.once("discovery:start", () => {
-      console.log("discovery started");
-      api.emit("invite:received");
-    });
+  const close = setupServer(api, socket1);
 
-    api.once("invite:accepted", () => {
-      console.log("invite was accepted");
-    });
+  /** @type {ClientApi<typeof api>} */
+  const client = setupClient(socket2);
 
+  client.once("invite:received", async () => {
+    console.log("client received invite, accepting");
+    await client.$projectsManagement.invite.accept();
+  });
+
+  await client.$sync.setDiscovery();
+
+  api.emit("discovery:start");
+
+  return new Promise((res) => {
     client.once("invite:received", async () => {
       console.log("client received invite, accepting");
       await client.$projectsManagement.invite.accept();
+      console.log("done");
+      close();
+      res("done");
     });
+  });
+}
 
-    await client.$sync.setDiscovery();
+async function runDataTypeExample() {
+  console.log("\nDATATYPE EXAMPLE:\n");
 
-    api.emit("discovery:start");
-  }
+  const { socket1, socket2 } = new DuplexPair({ objectMode: true });
 
-  dataTypeExample: {
-    const obs = await client.observation.create({
-      lat: 0,
-      lon: 0,
-      tags: {
-        type: "animal",
-      },
-    });
+  const api = new Api();
 
-    console.log(obs);
+  const close = setupServer(api, socket1);
 
-    const updatedObs = await client.observation.update(obs.version, {
-      ...obs.value,
-      tags: {
-        type: "place",
-      },
-    });
+  /** @type {ReturnType<typeof setupClient<typeof api>>} */
+  const client = setupClient(socket2);
 
-    console.log(updatedObs);
+  const obs = await client.observation.create({
+    lat: 0,
+    lon: 0,
+    tags: {
+      type: "animal",
+    },
+  });
 
-    const allObs = await client.observation.getMany({ includeDeleted: true });
+  console.log(obs);
 
-    console.log(allObs.length); // should be 2
+  const updatedObs = await client.observation.update(obs.version, {
+    ...obs.value,
+    tags: {
+      type: "place",
+    },
+  });
 
-    const deletedObs = await client.observation.delete(updatedObs.version);
+  console.log(updatedObs);
 
-    console.log(deletedObs.deleted); // should be true
-  }
-})();
+  const allObs = await client.observation.getMany({ includeDeleted: true });
+
+  console.log(allObs.length); // should be 2
+
+  const deletedObs = await client.observation.delete(updatedObs.version);
+
+  console.log(deletedObs.deleted); // should be true
+
+  close();
+}
+
+await runEventsExample();
+await runDataTypeExample();
