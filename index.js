@@ -17,7 +17,7 @@ const { createClient, createServer } = reflector;
  *
  * @returns {{api: Api, close: () => void}}
  */
-export function setupServer(channel, extend = (api) => api) {
+function setupServer(channel, extend = (api) => api) {
   const api = extend(new Api());
   const { close } = createServer(api, channel);
   return { api, close };
@@ -30,6 +30,8 @@ export function setupServer(channel, extend = (api) => api) {
  *
  * @returns {ClientApi<A>}
  */
-export function setupClient(channel) {
+function setupClient(channel) {
   return createClient(channel);
 }
+
+export { Api, setupClient, setupServer };
