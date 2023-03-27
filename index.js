@@ -12,7 +12,7 @@ const { createClient, createServer } = reflector;
  */
 
 /**
- * @param {import('stream').Duplex} channel
+ * @param {Parameters<typeof createClient>[0]} channel
  * @param {(api: Api) => Api} [extend]
  *
  * @returns {{api: Api, close: () => void}}
@@ -26,7 +26,7 @@ export function setupServer(channel, extend = (api) => api) {
 /**
  * @template {Api} A
  *
- * @param {import('stream').Duplex} channel
+ * @param {Parameters<typeof createClient>[0]} channel
  *
  * @returns {ClientApi<A>}
  */
