@@ -83,7 +83,7 @@ async function runDataTypeExample() {
 
   const close = setupServer(api, socket1);
 
-  /** @type {ReturnType<typeof setupClient<typeof api>>} */
+  /** @type {ClientApi<typeof api>} */
   const client = setupClient(socket2);
 
   const obs = await client.observation.create({
