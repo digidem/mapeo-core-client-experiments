@@ -27,10 +27,9 @@
  */
 
 /**
- * @typedef {Object} DeviceInfo
+ * @typedef {Object} Peer
  *
  * @property {string} id
- * @property {string} deviceId
  * @property {string?} name
  * @property {number} lastSynced
  * @property {number} lastSeen
@@ -262,25 +261,23 @@ export class SyncDriver {
   }
 }
 
-export class DeviceDriver {
-  /** @type {Map<string, DeviceInfo>} */
-  _devices = new Map();
+export class PeerDriver {
+  /** @type {Map<string, Peer>} */
+  _peers = new Map();
 
   /**
    * @param {string} id
-   * @returns {DeviceInfo | null}
+   * @returns {Peer | null}
    */
   get(id) {
-    const found = this._devices.get(id);
-
-    return found || null;
+    return this._peers.get(id) || null;
   }
 
   /**
-   * @returns {DeviceInfo[]}
+   * @returns {Peer[]}
    */
   getAll() {
-    return Array.from(this._devices.values());
+    return Array.from(this._peers.values());
   }
 }
 
@@ -348,20 +345,27 @@ export class ProjectDriver {
 
       /**
        * @param {string} id
-       * @param {{name:  string?, role: ProjectRole}} info
+       * @param {{name?:  string | null, role?: ProjectRole}} info
        *
        * @returns {ProjectMember}
        */
       update(id, info) {
+        if (info.name === undefined && info.role === undefined)
+          throw new Error("Must provide name or role to update");
+
         const member = self._members.get(id);
 
         if (!member) throw new Error("Does not exist");
 
-        const updated = { ...member, ...info };
+        if (info.name !== undefined) {
+          member.name = info.name;
+        }
 
-        self._members.set(id, updated);
+        if (info.role) {
+          member.role = info.role;
+        }
 
-        return updated;
+        return member;
       },
     };
   }
@@ -396,6 +400,15 @@ export class ProjectDriver {
   info() {
     return { id: this._id, name: this._name };
   }
+
+  /**
+   * @param {{ name: string }} info
+   * @returns {Project}
+   */
+  update(info) {
+    this._name = info.name;
+    return this.info();
+  }
 }
 
 export class ProjectsManagementDriver {
@@ -403,6 +416,14 @@ export class ProjectsManagementDriver {
 
   /** @type {Map<string, ProjectDriver>} */
   _projects = new Map();
+
+  /**
+   * @param {ProjectDriver} [initProjectDriver]
+   */
+  constructor(initProjectDriver) {
+    if (initProjectDriver)
+      this._projects.set(initProjectDriver.info().id, initProjectDriver);
+  }
 
   /**
    * @param {string} id
@@ -452,10 +473,7 @@ export class ProjectsManagementDriver {
 
     if (!project) throw new Error("Not found");
 
-    // TODO: Project class need some kind of update method?
-    project._name = info.name;
-
-    return project.info();
+    return project.update(info);
   }
 
   /**

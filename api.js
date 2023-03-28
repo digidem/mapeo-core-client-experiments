@@ -1,7 +1,13 @@
 // @ts-check
 import { TypedEmitter } from "tiny-typed-emitter";
 
-import { DataTypeDriver } from "./mapeo-drivers.js";
+import {
+  DataTypeDriver,
+  PeerDriver,
+  ProjectDriver,
+  ProjectsManagementDriver,
+  SyncDriver,
+} from "./mapeo-drivers.js";
 
 /**
  * @typedef {import('./types/api.js').ApiEvents} ApiEvents
@@ -15,10 +21,26 @@ export class Api extends TypedEmitter {
   /** @type {DataTypeDriver<Observation>} */
   #observation;
 
+  /** @type {SyncDriver} */
+  #sync;
+
+  /** @type {PeerDriver} */
+  #peer;
+
+  /** @type {ProjectDriver} */
+  #project;
+
+  /** @type {ProjectsManagementDriver} */
+  #projectsManager;
+
   constructor() {
     super();
 
     this.#observation = new DataTypeDriver("observation");
+    this.#sync = new SyncDriver();
+    this.#peer = new PeerDriver();
+    this.#project = new ProjectDriver("mapeo");
+    this.#projectsManager = new ProjectsManagementDriver(this.#project);
   }
 
   get observation() {
@@ -26,95 +48,18 @@ export class Api extends TypedEmitter {
   }
 
   get $sync() {
-    console.log("$sync");
-
-    return {
-      info() {
-        console.log("\tinfo");
-      },
-      setDiscovery() {
-        console.log("\tsetDiscovery");
-      },
-      setSync() {
-        console.log("\tsetSync");
-      },
-    };
+    return this.#sync;
   }
 
-  get $device() {
-    console.log("$device");
-    return {
-      get() {
-        console.log("\tget");
-      },
-      getAll() {
-        console.log("\tgetAll");
-      },
-    };
+  get $peer() {
+    return this.#peer;
   }
 
   get $project() {
-    console.log("$project");
-
-    return {
-      info() {
-        console.log("\tinfo");
-      },
-      member: {
-        get() {
-          console.log("\tmember.get");
-        },
-        getMany() {
-          console.log("\tmember.getMany");
-        },
-        add() {
-          console.log("\tmember.add");
-        },
-        update() {
-          console.log("\tmember.update");
-        },
-        remove() {
-          console.log("\tmember.remove");
-        },
-      },
-      invite: {
-        create() {
-          console.log("\tinvite.create");
-        },
-        getMany() {
-          console.log("\tinvite.getMany");
-        },
-      },
-    };
+    return this.#project;
   }
 
   get $projectsManagement() {
-    console.log("$projectsManagement");
-
-    return {
-      get() {
-        console.log("\tget");
-      },
-      getMany() {
-        console.log("\tgetMany");
-      },
-      create() {
-        console.log("\tcreate");
-      },
-      update() {
-        console.log("\tupdate");
-      },
-      delete() {
-        console.log("\tdelete");
-      },
-      invite: {
-        accept() {
-          console.log("\tinvite.accept");
-        },
-        decline() {
-          console.log("\tinvite.decline");
-        },
-      },
-    };
+    return this.#projectsManager;
   }
 }

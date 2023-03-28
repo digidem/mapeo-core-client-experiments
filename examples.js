@@ -3,44 +3,58 @@ import DuplexPair from "native-duplexpair";
 
 import { setupServer, setupClient } from "./index.js";
 
-async function runEventsExample() {
+function runEventsExample() {
   console.log("\nEVENTS EXAMPLE:\n");
 
   const { socket1, socket2 } = new DuplexPair({ objectMode: true });
 
-  const { api, close } = setupServer(socket1, (api) => {
-    api.once("discovery:start", () => {
-      console.log("discovery started");
-      api.emit("invite:received");
-    });
+  return new Promise(async (res, rej) => {
+    try {
+      const { api, close } = setupServer(socket1, (api) => {
+        api.once("discovery-start", () => {
+          const invite = {
+            id: Date.now().toString(),
+            project: api.$project.info(),
+            from: {
+              id: "abc123",
+              name: null,
+            },
+            role: "member",
+          };
 
-    api.once("invite:accepted", () => {
-      console.log("invite was accepted");
-    });
+          console.log("SERVER: DISCOVERY STARTED, SENDING INVITE", invite);
 
-    return api;
-  });
+          // For demo purposes
+          api.emit("invite-received", invite);
+        });
 
-  /** @type {import('./index.js').ClientApi<typeof api>} */
-  const client = setupClient(socket2);
+        api.once("invite-accepted", (invite) => {
+          console.log("SERVER: CLIENT ACCEPTED INVITE, CLOSING", invite);
+          close();
+          res("DONE");
+        });
 
-  client.once("invite:received", async () => {
-    console.log("client received invite, accepting");
-    await client.$projectsManagement.invite.accept();
-  });
+        return api;
+      });
 
-  await client.$sync.setDiscovery();
+      /** @type {import('./index.js').ClientApi<typeof api>} */
+      const client = setupClient(socket2);
 
-  api.emit("discovery:start");
+      client.$sync.setDiscovery(["lan"]).then(() => {
+        // For demo purposes
+        api.emit("discovery-start");
+      });
 
-  return new Promise((res) => {
-    client.once("invite:received", async () => {
-      console.log("client received invite, accepting");
-      await client.$projectsManagement.invite.accept();
-      console.log("done");
-      close();
-      res("done");
-    });
+      client.once("invite-received", (invite) => {
+        console.log("CLIENT: RECEIVED INVITE, ACCEPTING", invite);
+        client.$projectsManagement.invite.accept(invite.id, {}).then(() => {
+          // For demo purposes
+          api.emit("invite-accepted", invite);
+        });
+      });
+    } catch (thrown) {
+      rej(thrown);
+    }
   });
 }
 
