@@ -10,7 +10,7 @@ export type SyncExchangeInfo = {
   wants: number;
 };
 
-type SyncState = {
+export type SyncState = {
   // Peer id
   id: string;
   // Sync exchange info for database records
@@ -37,7 +37,7 @@ type SyncState = {
   } | null;
 };
 
-type Invite = {
+export type Invite = {
   id: string;
   project: {
     id: string;
