@@ -1,15 +1,15 @@
 // @ts-check
 import DuplexPair from "native-duplexpair";
 
-import { setupServer, setupClient } from "../index.js";
+import { createServer, createClient } from "../index.js";
 
 console.log("\nEVENTS EXAMPLE:\n");
 
 // 1. Setup server + client
 const { socket1, socket2 } = new DuplexPair({ objectMode: true });
 
-const { api, close } = setupServer(socket1);
-const client = setupClient(socket2);
+const { api, close } = createServer(socket1);
+const client = createClient(socket2);
 
 // 2. Add listeners to server
 api.once("discovery-start", () => {

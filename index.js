@@ -3,26 +3,24 @@ import reflector from "rpc-reflector";
 
 import { Api } from "./api.js";
 
-const { createClient, createServer } = reflector;
-
 /**
- * @param {Parameters<typeof createClient>[0]} channel
+ * @param {Parameters<typeof reflector.createServer>[1]} channel
  *
  * @returns {{api: Api, close: () => void}}
  */
-function setupServer(channel, ) {
-  const api = new Api()
-  const { close } = createServer(api, channel);
+function createServer(channel) {
+  const api = new Api();
+  const { close } = reflector.createServer(api, channel);
   return { api, close };
 }
 
 /**
- * @param {Parameters<typeof createClient>[0]} channel
+ * @param {Parameters<typeof reflector.createClient>[0]} channel
  *
  * @returns {import('rpc-reflector').ClientApi<Api>}
  */
-function setupClient(channel) {
-  return createClient(channel);
+function createClient(channel) {
+  return reflector.createClient(channel);
 }
 
-export { Api, setupClient, setupServer };
+export { Api, createClient, createServer };
