@@ -1,7 +1,7 @@
 // @ts-check
 import reflector from "rpc-reflector";
 
-import { Api } from "./api.js";
+import { Api } from "./mapeo-core/index.js";
 
 /**
  * @param {Parameters<typeof reflector.createServer>[1]} channel
@@ -17,7 +17,7 @@ function createServer(channel) {
 /**
  * @param {Parameters<typeof reflector.createClient>[0]} channel
  *
- * @returns {import('rpc-reflector').ClientApi<Api>}
+ * @returns {import('rpc-reflector').ClientApi<ReturnType<typeof createServer>['api']>}
  */
 function createClient(channel) {
   return reflector.createClient(channel);

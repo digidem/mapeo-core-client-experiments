@@ -2,7 +2,7 @@
 
 Experiments around combining [Mapeo Core Next](https://github.com/digidem/mapeo-core-next) and [`rpc-reflector`](https://github.com/gmaclennan/rpc-reflector/) to create an easy to use client for Mapeo.
 
-## Overview
+## Usage
 
 Desired API usage looks like this:
 
@@ -43,3 +43,11 @@ client.on("heartbeat", (status) => {...});
 // Look Ma, no transport boilerplate!
 const obs = await client.observation.create(...);
 ```
+
+See additional examples in the [`examples`](./examples/) directory.
+
+### Development
+
+- The `mapeo-core` directory is a dummy implementation of `mapeo-core-next`. In reality, we'd be specifying `mapeo-core-next` as a dep for this project and then using that.
+
+- Run examples using `node` e.g. `node examples/datatype.js`

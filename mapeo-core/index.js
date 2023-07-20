@@ -7,15 +7,14 @@ import {
   ProjectDriver,
   ProjectsManagementDriver,
   SyncDriver,
-} from "./mapeo-drivers.js";
+} from "./drivers.js";
 
 /**
- * @typedef {import('./types/api.js').ApiEvents} ApiEvents
- * @typedef {import('./types/mapeo.js').Observation} Observation
+ * @typedef {import('../types/mapeo.js').Observation} Observation
  */
 
 /**
- * @extends {TypedEmitter<ApiEvents>}
+ * @extends {TypedEmitter<import('../types/api.js').ApiEvents>}
  */
 export class Api extends TypedEmitter {
   /** @type {DataTypeDriver<Observation>} */
