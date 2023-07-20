@@ -30,7 +30,7 @@ import { createClient } from "mapeo-core-client";
 
 // `channel` is an interface that adheres to rpc-reflector's requirements
 // https://github.com/digidem/rpc-reflector#const--close---createserverapi-channel
-const client = createClient();
+const client = createClient(channel);
 
 // You can add additional event listeners to the client
 // See `ApiEvents` in `types/api.d.ts`` for a list of available built-in events
