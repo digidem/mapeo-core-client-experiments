@@ -1,65 +1,66 @@
 export type Peer = {
-  id: string;
-  name: string | null;
-  lastSynced: string;
-  lastSeen: string;
-};
+  id: string
+  name: string | null
+  lastSynced: string
+  lastSeen: string
+}
 
 export type SyncExchangeInfo = {
-  has: number;
-  wants: number;
-};
+  has: number
+  wants: number
+}
 
 export type SyncState = {
   // Peer id
-  id: string;
+  id: string
   // Sync exchange info for database records
-  db: SyncExchangeInfo;
+  db: SyncExchangeInfo
   // Sync exchange info for media
-  media: SyncExchangeInfo;
+  media: SyncExchangeInfo
   // Snapshot of the sync exchange info when the sync started
   atSyncStart: {
-    timestamp: string;
-    db: SyncExchangeInfo;
-    media: SyncExchangeInfo;
-  };
+    timestamp: string
+    db: SyncExchangeInfo
+    media: SyncExchangeInfo
+  }
   // The last time a sync completed
-  lastCompletedAt: string;
+  lastCompletedAt: string
   // Populated if an error occurred when trying to sync
   syncError: {
-    timestamp: string;
-    error: string;
-  } | null;
+    timestamp: string
+    error: string
+  } | null
   // Populated if an error occurrred when trying to connect to peer
   connectionError: {
-    timestamp: string;
-    error: string;
-  } | null;
-};
+    timestamp: string
+    error: string
+  } | null
+}
 
 export type Invite = {
-  id: string;
+  id: string
   project: {
-    id: string;
-    name: string | null;
-  };
+    id: string
+    name: string | null
+  }
   from: {
-    id: string;
-    name: string | null;
-  };
-  role: ProjectRole;
-};
+    id: string
+    name: string | null
+  }
+  role: ProjectRole
+}
 
 export interface ApiEvents {
-  "peer-connect": (peer: Peer) => void;
-  "peer-disconnect": (peer: Peer) => void;
-  "peer-info": (peer: Peer) => void;
-  "peer-sync": (state: SyncState) => void;
-  "discovery-start": () => void;
-  "discovery-stop": () => void;
-  "sync-start": () => void;
-  "sync-stop": () => void;
-  "invite-received": (invite: Invite) => void;
-  "invite-accepted": (invite: Invite) => void;
-  "invite-declined": (invite: Invite) => void;
+  [customEvent: string]: (...args: any[]) => void
+  'peer-connect': (peer: Peer) => void
+  'peer-disconnect': (peer: Peer) => void
+  'peer-info': (peer: Peer) => void
+  'peer-sync': (state: SyncState) => void
+  'discovery-start': () => void
+  'discovery-stop': () => void
+  'sync-start': () => void
+  'sync-stop': () => void
+  'invite-received': (invite: Invite) => void
+  'invite-accepted': (invite: Invite) => void
+  'invite-declined': (invite: Invite) => void
 }

@@ -1,7 +1,7 @@
 export interface Observation {
-  lat: number;
-  lon: number;
+  lat: number
+  lon: number
   tags?: {
-    type: string;
-  };
+    type: string
+  }
 }

@@ -1,5 +1,5 @@
 // @ts-check
-import { TypedEmitter } from "tiny-typed-emitter";
+import { TypedEmitter } from 'tiny-typed-emitter'
 
 import {
   DataTypeDriver,
@@ -7,7 +7,7 @@ import {
   ProjectDriver,
   ProjectsManagementDriver,
   SyncDriver,
-} from "./drivers.js";
+} from './drivers.js'
 
 /**
  * @typedef {import('../types/mapeo.js').Observation} Observation
@@ -18,47 +18,47 @@ import {
  */
 export class Api extends TypedEmitter {
   /** @type {DataTypeDriver<Observation>} */
-  #observation;
+  #observation
 
   /** @type {SyncDriver} */
-  #sync;
+  #sync
 
   /** @type {PeerDriver} */
-  #peer;
+  #peer
 
   /** @type {ProjectDriver} */
-  #project;
+  #project
 
   /** @type {ProjectsManagementDriver} */
-  #projectsManager;
+  #projectsManager
 
   constructor() {
-    super();
+    super()
 
-    this.#observation = new DataTypeDriver("observation");
-    this.#sync = new SyncDriver();
-    this.#peer = new PeerDriver();
-    this.#project = new ProjectDriver("mapeo");
-    this.#projectsManager = new ProjectsManagementDriver(this.#project);
+    this.#observation = new DataTypeDriver('observation')
+    this.#sync = new SyncDriver()
+    this.#peer = new PeerDriver()
+    this.#project = new ProjectDriver('mapeo')
+    this.#projectsManager = new ProjectsManagementDriver(this.#project)
   }
 
   get observation() {
-    return this.#observation;
+    return this.#observation
   }
 
   get $sync() {
-    return this.#sync;
+    return this.#sync
   }
 
   get $peer() {
-    return this.#peer;
+    return this.#peer
   }
 
   get $project() {
-    return this.#project;
+    return this.#project
   }
 
   get $projectsManagement() {
-    return this.#projectsManager;
+    return this.#projectsManager
   }
 }

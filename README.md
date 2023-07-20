@@ -8,21 +8,21 @@ Desired API usage looks like this:
 
 ```js
 // server.js
-import { createServer } from "mapeo-core-client";
+import { createServer } from 'mapeo-core-client'
 
 // `channel` is an interface that adheres to rpc-reflector's requirements
 // https://github.com/digidem/rpc-reflector#const--close---createserverapi-channel
-const server = createServer(channel);
+const server = createServer(channel)
 
 // You can add additional event listeners to the API instance `server.api`
 // See `ApiEvents` in `types/api.d.ts`` for a list of available built-in events
-server.api.on("sync-start", onSyncStart);
+server.api.on('sync-start', onSyncStart)
 
 // You can emit custom events
-server.api.emit("heartbeat", status);
+server.api.emit('heartbeat', status)
 
 // Eventually close the server using the `close` method
-server.close();
+server.close()
 ```
 
 ```js

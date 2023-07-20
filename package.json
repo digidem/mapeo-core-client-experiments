@@ -5,6 +5,7 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
+    "format": "prettier . --write",
     "lint": "tsc --noEmit"
   },
   "author": "Andrew Chou <andrewchou@fastmail.com>",
@@ -17,6 +18,11 @@
     "@types/native-duplexpair": "^1.0.0",
     "@types/node": "^20.4.2",
     "native-duplexpair": "^1.0.0",
+    "prettier": "^3.0.0",
     "typescript": "^5.1.6"
+  },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true
   }
 }
