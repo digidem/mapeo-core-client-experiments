@@ -1,6 +1,6 @@
 {
-  "name": "mapeo-core-client-playground",
-  "version": "0.0.0",
+  "name": "mapeo-core-client",
+  "version": "0.1.0",
   "description": "",
   "type": "module",
   "main": "index.js",
