@@ -6,12 +6,6 @@ import { Api } from "./api.js";
 const { createClient, createServer } = reflector;
 
 /**
- * @template A
- *
- * @typedef {import('rpc-reflector/dist/client.js').ClientApi<A>} ClientApi
- */
-
-/**
  * @param {Parameters<typeof createClient>[0]} channel
  * @param {(api: Api) => Api} [extend]
  *
@@ -28,7 +22,7 @@ function setupServer(channel, extend = (api) => api) {
  *
  * @param {Parameters<typeof createClient>[0]} channel
  *
- * @returns {ClientApi<A>}
+ * @returns {import('rpc-reflector').ClientApi<A>}
  */
 function setupClient(channel) {
   return createClient(channel);
